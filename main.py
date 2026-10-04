@@ -1,71 +1,31 @@
-import os
-import re
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 
 PROJECT_DIR = Path(__file__).parent
 PLOT_FILE = PROJECT_DIR / "plot.txt"
-OUTPUT_DIR = PROJECT_DIR / "output"
-MODEL = "gemini-3.8-flash"
-MAX_RETRIES = 5
-# 429 = rate limited; 5xx = temporary server problems (e.g. 503 "high demand").
-RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+OUTPUT_DIR = PROJECT_DIR / "output" / "openai"
+MODEL = "gpt-6-luna"
 
 BASE_PROMPT = """Write a short fictional story based on this plot:
 
 {plot}"""
 
-ORIGINALITY = """Avoid clichés and familiar story tropes.
-Introduce an unexpected but believable development.
-Explore an idea or perspective that feels genuinely original."""
-
-CHARACTER_COMPLEXITY = """Develop multidimensional characters with conflicting motivations.
-Avoid stereotypical characters.
-Give characters unexpected traits, motivations, or changes
-that emerge naturally from the events of the story."""
-
-CHARACTERIZATION_FOCALIZATION = """Construct the characters through both direct and indirect characterization.
-
-For each major character:
-- Establish some traits explicitly, but reveal important characteristics
-  indirectly through actions, dialogue, choices, reactions, and interactions
-  with other characters.
-- Avoid explicitly explaining every aspect of a character's personality.
-- Allow the reader to infer motivations and personality from what the
-  character does and says.
-
-Use focalization deliberately rather than presenting all information
-from a neutral, omniscient perspective.
-
-Choose a focalizing character and filter important events through that
-character's perception, knowledge, emotions, and interpretation.
-
-Do not give the reader information that the focalizing character could
-not reasonably know unless there is a deliberate shift in focalization.
-
-Use the difference between what the focalizing character perceives and
-what is actually happening to create ambiguity, tension, irony, or
-surprise.
-
-Do not explicitly explain the character's motivations or the meaning
-of every event. Leave some information for the reader to infer."""
+FREE_INDIRECT_DISCOURSE = """Use free indirect discourse to represent the perspective and consciousness of the main character."""
 
 # Each prompt type is the baseline prompt plus (optionally) extra instructions.
 PROMPT_TYPES = {
     "baseline": None,
-    "originality": ORIGINALITY,
-    "character_complexity": CHARACTER_COMPLEXITY,
-    "characterization_focalization": CHARACTERIZATION_FOCALIZATION,
+    "free_indirect_discourse": FREE_INDIRECT_DISCOURSE,
 }
 
 load_dotenv()
 
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+# The SDK retries rate limits (429) and temporary server errors (5xx) itself.
+client = OpenAI(max_retries=5)
 
 
 def build_prompt(plot, instructions):
@@ -76,19 +36,8 @@ def build_prompt(plot, instructions):
 
 
 def generate_story(prompt):
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            interaction = client.interactions.create(model=MODEL, input=prompt)
-            return interaction.output_text
-        except Exception as e:
-            status = getattr(e, "status_code", None)
-            if status not in RETRYABLE_STATUS_CODES or attempt == MAX_RETRIES:
-                raise
-            match = re.search(r"retry in (\d+(?:\.\d+)?)s", str(e))
-            wait = float(match.group(1)) + 1 if match else 30 * attempt
-            reason = "Rate limited" if status == 429 else f"Server error {status}"
-            print(f"  {reason}, waiting {wait:.0f}s (attempt {attempt}/{MAX_RETRIES})...")
-            time.sleep(wait)
+    response = client.responses.create(model=MODEL, input=prompt)
+    return response.output_text
 
 
 def main():
@@ -96,6 +45,12 @@ def main():
         # Resume an existing run: reuse its plot and fill in missing stories.
         run_dir = Path(sys.argv[1])
         plot = (run_dir / "plot.txt").read_text(encoding="utf-8")
+        model_file = run_dir / "model_name.txt"
+        if model_file.exists() and model_file.read_text(encoding="utf-8").strip() != MODEL:
+            raise SystemExit(
+                f"{run_dir} was generated with {model_file.read_text(encoding='utf-8').strip()}, "
+                f"but MODEL is {MODEL}. Not mixing models in one run."
+            )
     else:
         if not PLOT_FILE.exists():
             raise SystemExit(f"Plot file not found: {PLOT_FILE}")
@@ -103,9 +58,10 @@ def main():
         if not plot:
             raise SystemExit(f"Plot file is empty: {PLOT_FILE}")
 
-        run_dir = OUTPUT_DIR / f"run_{datetime.now():%Y%m%d_%H%M%S}"
+        run_dir = OUTPUT_DIR / f"run_{MODEL}_{datetime.now():%Y%m%d_%H%M%S}"
         run_dir.mkdir(parents=True)
         (run_dir / "plot.txt").write_text(plot, encoding="utf-8")
+        (run_dir / "model_name.txt").write_text(MODEL, encoding="utf-8")
 
     for name, instructions in PROMPT_TYPES.items():
         if (run_dir / f"{name}.txt").exists():
