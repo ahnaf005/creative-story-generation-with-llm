@@ -9,6 +9,7 @@ PROJECT_DIR = Path(__file__).parent
 PLOT_FILE = PROJECT_DIR / "plot.txt"
 OUTPUT_DIR = PROJECT_DIR / "output" / "openai"
 MODEL = "gpt-6-luna"
+# MODEL = "gpt-5.5"
 
 BASE_PROMPT = """Write a short fictional story based on this plot:
 
