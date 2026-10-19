@@ -13,7 +13,9 @@ MODEL = "gpt-6-luna"
 
 BASE_PROMPT = """Write a short fictional story based on this plot:
 
-{plot}"""
+{plot}
+
+The story should be around 1500-2000 words and must not exceed 3000 words."""
 
 FREE_INDIRECT_DISCOURSE = """Use free indirect discourse to represent the perspective and consciousness of the main character."""
 
@@ -37,7 +39,10 @@ def build_prompt(plot, instructions):
 
 
 def generate_story(prompt):
-    response = client.responses.create(model=MODEL, input=prompt)
+    # Each call is independent: no previous_response_id is passed, so the model
+    # never sees earlier prompts, and store=False keeps OpenAI from saving the
+    # response for later reuse.
+    response = client.responses.create(model=MODEL, input=prompt, store=False)
     return response.output_text
 
 
