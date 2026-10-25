@@ -1,5 +1,3 @@
-import sys
-from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -10,6 +8,9 @@ PLOT_FILE = PROJECT_DIR / "plot.txt"
 OUTPUT_DIR = PROJECT_DIR / "output" / "openai"
 MODEL = "gpt-6-luna"
 # MODEL = "gpt-5.5"
+# Total number of simulations wanted per plot/model. Running the script tops
+# the model folder up to this many (e.g. 1 existing + 4 new = 5).
+SIMULATION_COUNT = 5
 
 BASE_PROMPT = """Write a short fictional story based on this plot:
 
@@ -46,38 +47,51 @@ def generate_story(prompt):
     return response.output_text
 
 
-def main():
-    if len(sys.argv) > 1:
-        # Resume an existing run: reuse its plot and fill in missing stories.
-        run_dir = Path(sys.argv[1])
-        plot = (run_dir / "plot.txt").read_text(encoding="utf-8")
-        model_file = run_dir / "model_name.txt"
-        if model_file.exists() and model_file.read_text(encoding="utf-8").strip() != MODEL:
+def read_plot_file():
+    """Return (plot_name, plot). The first line of plot.txt is the plot name."""
+    if not PLOT_FILE.exists():
+        raise SystemExit(f"Plot file not found: {PLOT_FILE}")
+    lines = PLOT_FILE.read_text(encoding="utf-8").strip().split("\n", 1)
+    plot_name = lines[0].strip()
+    plot = lines[1].strip() if len(lines) > 1 else ""
+    if not plot_name or not plot:
+        raise SystemExit(f"{PLOT_FILE} needs the plot name on line 1 and the plot below it.")
+    return plot_name, plot
+
+
+def check_same_plot(model_dir, plot):
+    """Stop if existing simulations in model_dir were made from a different plot."""
+    for saved in model_dir.glob("simulation*/plot.txt"):
+        if saved.read_text(encoding="utf-8").strip() != plot:
             raise SystemExit(
-                f"{run_dir} was generated with {model_file.read_text(encoding='utf-8').strip()}, "
-                f"but MODEL is {MODEL}. Not mixing models in one run."
+                f"{saved} has a different plot than {PLOT_FILE}. "
+                f"Check the plot name on line 1 of {PLOT_FILE.name}."
             )
-    else:
-        if not PLOT_FILE.exists():
-            raise SystemExit(f"Plot file not found: {PLOT_FILE}")
-        plot = PLOT_FILE.read_text(encoding="utf-8").strip()
-        if not plot:
-            raise SystemExit(f"Plot file is empty: {PLOT_FILE}")
 
-        run_dir = OUTPUT_DIR / f"run_{MODEL}_{datetime.now():%Y%m%d_%H%M%S}"
-        run_dir.mkdir(parents=True)
-        (run_dir / "plot.txt").write_text(plot, encoding="utf-8")
-        (run_dir / "model_name.txt").write_text(MODEL, encoding="utf-8")
 
-    for name, instructions in PROMPT_TYPES.items():
-        if (run_dir / f"{name}.txt").exists():
-            print(f"Skipping {name}, already generated.")
+def main():
+    plot_name, plot = read_plot_file()
+    model_dir = OUTPUT_DIR / plot_name / MODEL
+    check_same_plot(model_dir, plot)
+
+    # Fill simulation1..SIMULATION_COUNT; complete simulations are skipped and
+    # incomplete ones (e.g. from an interrupted run) only get their missing stories.
+    for sim in range(1, SIMULATION_COUNT + 1):
+        sim_dir = model_dir / f"simulation{sim}"
+        missing = [n for n in PROMPT_TYPES if not (sim_dir / f"{n}.txt").exists()]
+        if not missing:
+            print(f"simulation{sim}: already complete, skipping.")
             continue
-        print(f"Generating {name} story...")
-        story = generate_story(build_prompt(plot, instructions))
-        (run_dir / f"{name}.txt").write_text(story, encoding="utf-8")
 
-    print(f"All stories written to {run_dir}")
+        sim_dir.mkdir(parents=True, exist_ok=True)
+        (sim_dir / "plot.txt").write_text(plot, encoding="utf-8")
+        (sim_dir / "model_name.txt").write_text(MODEL, encoding="utf-8")
+        for name in missing:
+            print(f"simulation{sim}: generating {name} story...")
+            story = generate_story(build_prompt(plot, PROMPT_TYPES[name]))
+            (sim_dir / f"{name}.txt").write_text(story, encoding="utf-8")
+
+    print(f"{model_dir} now has {SIMULATION_COUNT} simulations.")
 
 
 if __name__ == "__main__":
