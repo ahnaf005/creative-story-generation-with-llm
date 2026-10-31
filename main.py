@@ -6,8 +6,8 @@ from openai import OpenAI
 PROJECT_DIR = Path(__file__).parent
 PLOT_FILE = PROJECT_DIR / "plot.txt"
 OUTPUT_DIR = PROJECT_DIR / "output" / "openai"
-MODEL = "gpt-6-luna"
-# MODEL = "gpt-5.5"
+# MODEL = "gpt-6-luna"
+MODEL = "gpt-5.5"
 # Total number of simulations wanted per plot/model. Running the script tops
 # the model folder up to this many (e.g. 1 existing + 4 new = 5).
 SIMULATION_COUNT = 5
