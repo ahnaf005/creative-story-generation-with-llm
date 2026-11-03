@@ -69,6 +69,14 @@ def check_same_plot(model_dir, plot):
             )
 
 
+def format_prompts(plot):
+    """All prompts sent for one simulation, one section per prompt type."""
+    return "\n\n".join(
+        f"===== {name} =====\n{build_prompt(plot, instructions)}"
+        for name, instructions in PROMPT_TYPES.items()
+    )
+
+
 def main():
     plot_name, plot = read_plot_file()
     model_dir = OUTPUT_DIR / plot_name / MODEL
@@ -85,7 +93,7 @@ def main():
 
         sim_dir.mkdir(parents=True, exist_ok=True)
         (sim_dir / "plot.txt").write_text(plot, encoding="utf-8")
-        (sim_dir / "model_name.txt").write_text(MODEL, encoding="utf-8")
+        (sim_dir / "prompt.txt").write_text(format_prompts(plot), encoding="utf-8")
         for name in missing:
             print(f"simulation{sim}: generating {name} story...")
             story = generate_story(build_prompt(plot, PROMPT_TYPES[name]))
