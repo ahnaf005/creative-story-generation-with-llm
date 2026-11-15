@@ -1,0 +1,21 @@
+===== baseline =====
+Write a short fictional story based on this plot:
+
+Navigating a complex social landscape, the protagonist experiences a series of complex relationships
+and emotional turmoil in a student environment, and engages in self-discovery and self-reflection as she
+interacts with the characters Carl, Martin, Lizzy, and Johan, resulting in a journey of introspection,
+betrayal, love, and personal growth.
+
+The story should be around 1500-2000 words and must not exceed 3000 words.
+
+===== free_indirect_discourse =====
+Write a short fictional story based on this plot:
+
+Navigating a complex social landscape, the protagonist experiences a series of complex relationships
+and emotional turmoil in a student environment, and engages in self-discovery and self-reflection as she
+interacts with the characters Carl, Martin, Lizzy, and Johan, resulting in a journey of introspection,
+betrayal, love, and personal growth.
+
+The story should be around 1500-2000 words and must not exceed 3000 words.
+
+Use free indirect discourse to represent the perspective and consciousness of the main character.

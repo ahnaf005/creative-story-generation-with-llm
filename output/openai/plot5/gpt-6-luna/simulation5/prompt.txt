@@ -1,0 +1,21 @@
+===== baseline =====
+Write a short fictional story based on this plot:
+
+Daniel, struggling with recurring dreams of his ex-wife Rachel and a mysterious unused flat, eventually
+discusses them with his current partner Isabel, sparking various reflections and conversations about their
+past relationships, until a real-life discovery of old keys triggers a nostalgic memory and helps him find a
+way to reconnect with his present relationship through canoeing.
+
+The story should be around 1500-2000 words and must not exceed 3000 words.
+
+===== free_indirect_discourse =====
+Write a short fictional story based on this plot:
+
+Daniel, struggling with recurring dreams of his ex-wife Rachel and a mysterious unused flat, eventually
+discusses them with his current partner Isabel, sparking various reflections and conversations about their
+past relationships, until a real-life discovery of old keys triggers a nostalgic memory and helps him find a
+way to reconnect with his present relationship through canoeing.
+
+The story should be around 1500-2000 words and must not exceed 3000 words.
+
+Use free indirect discourse to represent the perspective and consciousness of the main character.

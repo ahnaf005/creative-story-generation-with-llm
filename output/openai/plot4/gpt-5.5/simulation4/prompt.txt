@@ -1,0 +1,17 @@
+===== baseline =====
+Write a short fictional story based on this plot:
+
+Two individuals, at a residency together, navigate the complexity of their ephemeral relationship during
+their final beach trip, framed by misadventures, subtle tensions, unspoken desires, and looming departures.
+
+The story should be around 1500-2000 words and must not exceed 3000 words.
+
+===== free_indirect_discourse =====
+Write a short fictional story based on this plot:
+
+Two individuals, at a residency together, navigate the complexity of their ephemeral relationship during
+their final beach trip, framed by misadventures, subtle tensions, unspoken desires, and looming departures.
+
+The story should be around 1500-2000 words and must not exceed 3000 words.
+
+Use free indirect discourse to represent the perspective and consciousness of the main character.
